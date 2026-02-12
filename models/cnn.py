@@ -11,7 +11,7 @@ class SimpleCNN(nn.Module):
     Simple CNN architecture for image classification
     Suitable for datasets like MNIST, CIFAR-10
     """
-    def __init__(self, input_channels=3, num_classes=10):
+    def __init__(self, input_channels=3, num_classes=10, input_size=32):
         super(SimpleCNN, self).__init__()
         
         # Convolutional layers
@@ -25,8 +25,12 @@ class SimpleCNN(nn.Module):
         # Max pooling
         self.pool = nn.MaxPool2d(2, 2)
         
+        # Calculate size after convolutions and pooling
+        # Three pooling layers each divide by 2
+        self.feature_size = (input_size // 8) * (input_size // 8) * 128
+        
         # Fully connected layers
-        self.fc1 = nn.Linear(128 * 4 * 4, 256)
+        self.fc1 = nn.Linear(self.feature_size, 256)
         self.dropout = nn.Dropout(0.5)
         self.fc2 = nn.Linear(256, num_classes)
         
@@ -39,7 +43,7 @@ class SimpleCNN(nn.Module):
         x = self.pool(F.relu(self.bn3(self.conv3(x))))
         
         # Flatten
-        x = x.view(-1, 128 * 4 * 4)
+        x = x.view(-1, self.feature_size)
         
         # Fully connected layers
         x = F.relu(self.fc1(x))
@@ -61,11 +65,11 @@ def get_model(dataset='cifar10', device='cuda'):
         model: CNN model
     """
     if dataset.lower() == 'mnist':
-        model = SimpleCNN(input_channels=1, num_classes=10)
+        model = SimpleCNN(input_channels=1, num_classes=10, input_size=28)
     elif dataset.lower() == 'cifar10':
-        model = SimpleCNN(input_channels=3, num_classes=10)
+        model = SimpleCNN(input_channels=3, num_classes=10, input_size=32)
     elif dataset.lower() == 'cifar100':
-        model = SimpleCNN(input_channels=3, num_classes=100)
+        model = SimpleCNN(input_channels=3, num_classes=100, input_size=32)
     else:
         raise ValueError(f"Unsupported dataset: {dataset}")
     
